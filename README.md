@@ -89,9 +89,45 @@ Arrays can be searched with helper scopes.
 
     User.array_has(:permissions, "admin")
     User.array_has(:permissions, "manage_accounts", "manage_users")
-    User.arrays_have([:permissions, :roles], :and, "admin")
-    User.arrays_have([:permissions, :roles], :or, "manage_accounts", "manage_users")
     User.array_has_any(:favorite_integers, 7, 11, 42)
+
+Adds where condition that requires columns at least one to contain all values:
+```ruby
+User.arrays_have([:permissions, :roles], :and, "admin")
+# => SELECT * FROM "users" 
+# WHERE "users"."permissions" @> ARRAY["manage_users"]::text AND 
+# "users"."roles" @> ARRAY["manage_users"]::text;
+```
+```ruby
+User.arrays_have([:permissions, :roles], :or, "manage_users", "manage_roles")
+# => SELECT * FROM "users" 
+# WHERE "users"."permissions" @> ARRAY["manage_users"]::text OR 
+# "users"."roles" @> ARRAY["manage_users"]::text;
+```
+```ruby
+User.arrays_have([:permissions, :roles], :and, ["manage_users", "manage_roles"])
+# => SELECT * FROM "users" 
+# WHERE "users"."permissions" @> ARRAY["manage_users", "manage_roles"]::text AND 
+# "users"."roles" @> ARRAY["manage_users", "manage_roles"]::text;
+```
+
+Adds where condition that requires column contains in array. It's analog function 'IN', but with better performance
+https://www.datadoghq.com/2013/08/100x-faster-postgres-performance-by-changing-1-line/
+```ruby
+User.in_array_values(:roles, [1,2,3])
+# => SELECT * FROM "users" WHERE "users"."roles" = ANY(VALUES (1), (2), (3));
+```
+
+Adds where condition to join conditions with OR
+Params should be ActiveRecord::Relation with string conditions
+```ruby
+User.or_conditions(User.where("id = 1"), User.where("id = 2"))
+# => SELECT * FROM users WHERE (("users"."id" = 1) OR ("users"."id" = 2));
+```
+```ruby
+User.or_conditions(User.where("id = 1"), User.where("id = 2"), User.where("id = 3"))
+# => SELECT * FROM users WHERE (("users"."id" = 1) OR ("users"."id" = 2) OR ("users"."id" = 3));
+```
 
 # Synchronous Commit
 
