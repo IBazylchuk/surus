@@ -89,6 +89,8 @@ Arrays can be searched with helper scopes.
 
     User.array_has(:permissions, "admin")
     User.array_has(:permissions, "manage_accounts", "manage_users")
+    User.arrays_have([:permissions, :roles], :and, "admin")
+    User.arrays_have([:permissions, :roles], :or, "manage_accounts", "manage_users")
     User.array_has_any(:favorite_integers, 7, 11, 42)
 
 # Synchronous Commit
