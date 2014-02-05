@@ -28,10 +28,10 @@ module Surus
       #   User.arrays_have([:permissions, :roles], :or, "manage_users", "manage_roles")
       #   User.arrays_have([:permissions, :roles], :and, ["manage_users", "manage_roles"])
       def arrays_have(columns, join_type, *values)
-        raise "Should be array in first attribute. If you want find in a column, please use 'array_has'." unless columns.is_a? Array
+        raise "Should be array in first attribute. If you want find in a column, please use 'array_has'." unless columns.is_a?(::Array)
         _query = []
         _values = []
-        columns.each do |column|
+        columns.uniq.each do |column|
           _query << "#{connection.quote_column_name(column)} @> ARRAY[?]#{array_cast(column)}"
         end
 
